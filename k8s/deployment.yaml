@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    labels:
+        run: capstone-backend
+    name: capstone-backend
+spec:
+    replicas: 3
+    selector: 
+        matchLabels:
+            run: capstone-backend
+    template:
+        metadata:
+            labels:
+                run: capstone-backend
+        spec:
+            containers:
+            - image: gcr.io/capstone-similarity-check/capstone-backend:latest
+              name: capstone-backend
+              ports:
+              - containerPort: 3000
