@@ -1,0 +1,19 @@
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+  name: capstonebackend 
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: capstonebackend
+  template:
+    metadata:
+      labels:
+        app: capstonebackend 
+    spec:
+      containers:
+        - name: capstonebackend 
+          image: capstonecontainerregistry.azurecr.io/capstonebackend
+          ports:
+          - containerPort: 3000
