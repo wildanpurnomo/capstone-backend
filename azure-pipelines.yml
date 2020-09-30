@@ -11,12 +11,7 @@ resources:
 variables:
 
   # Container registry service connection established during pipeline creation
-  dockerRegistryServiceConnection: 'c92f3991-4eee-4c6a-ba87-3a57b571ac63'
-  imageRepository: 'capstonebackend'
-  containerRegistry: 'capstonecontainerregistry.azurecr.io'
-  dockerfilePath: '**/Dockerfile'
   tag: '$(Build.BuildId)'
-  imagePullSecret: 'capstonecontainerregistry8611-auth'
 
   # Agent VM image name
   vmImageName: 'ubuntu-latest'
@@ -30,7 +25,10 @@ stages:
     displayName: Build
     pool:
       vmImage: $(vmImageName)
-    steps:
+    steps: 
+    - bash: echo "##vso[task.setvariable variable=EXPRESS_JWT_SECRET]masihsukabangetsamadia"
+    - bash: echo "##vso[task.setvariable variable=EXPRESS_MONGODB_URI]$(EXPRESS_MONGODB_URI)"
+    - bash: echo "##vso[task.setvariable variable=EXPRESS_ALLOWED_ORIGINS]$(EXPRESS_ALLOWED_ORIGINS)" 
     - task: Docker@2
       displayName: Build and push an image to container registry
       inputs:
@@ -40,7 +38,7 @@ stages:
         containerRegistry: $(dockerRegistryServiceConnection)
         tags: |
           $(tag)
-          
+        
     - upload: manifests
       artifact: manifests
 

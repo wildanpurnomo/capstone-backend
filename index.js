@@ -5,6 +5,25 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// CORS
+app.use((req, res, next) => {
+    let allowedOrigin = process.env.EXPRESS_ALLOWED_ORIGINS;
+    if (allowedOrigin.includes(' ')) {
+        allowedOrigin = allowedOrigin.split(' ');
+    } else {
+        allowedOrigin = [allowedOrigin];
+    }
+    let currentOrigin = req.headers.origin;
+    if (allowedOrigin.indexOf(currentOrigin) > -1) {
+        res.header('Access-Control-Allow-Origin', currentOrigin);
+    }
+    res.header('Access-Control-Allow-Credentials', true);
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
+    next();
+});
+
+
 // Host Vue SPA in public/dist directory
 const history = require('connect-history-api-fallback');
 app.use(history({
@@ -26,15 +45,29 @@ app.get('/', (req, res) => {
 const logger = require('morgan');
 app.use(logger('dev'));
 
+// use REST API router
+const authRouter = require('./routes/authRoutes');
+app.use('/api', authRouter);
+
 // Use Error Middleware
 const { handleError } = require('./lib/error');
 app.use((err, req, res, next) => {
     handleError(err, res);
 });
 
-// Start server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+// Start server upon connected to DB
+const mongoose = require('mongoose');
+const dbUri = process.env.EXPRESS_MONGODB_URI || "mongodb://localhost/masihsukadia";
+mongoose.connect(dbUri, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true })
+    .then((result) => {
+        const PORT = process.env.PORT || 3000;
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
+    })
+    .catch((error) => {
+        console.log(error);
+    });
+
+
 
