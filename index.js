@@ -1,28 +1,17 @@
 const express = require('express');
 const app = express();
 
+// HTTPS Redirection
+const { redirectToSecure } = require('./lib/https');
+app.use(redirectToSecure);
+
 // BodyParser Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // CORS
-app.use((req, res, next) => {
-    let allowedOrigin = process.env.EXPRESS_ALLOWED_ORIGINS;
-    if (allowedOrigin.includes(' ')) {
-        allowedOrigin = allowedOrigin.split(' ');
-    } else {
-        allowedOrigin = [allowedOrigin];
-    }
-    let currentOrigin = req.headers.origin;
-    if (allowedOrigin.indexOf(currentOrigin) > -1) {
-        res.header('Access-Control-Allow-Origin', currentOrigin);
-    }
-    res.header('Access-Control-Allow-Credentials', true);
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE,OPTIONS");
-    next();
-});
-
+const { handleCors } = require('./lib/cors');
+app.use(handleCors);
 
 // Host Vue SPA in public/dist directory
 const history = require('connect-history-api-fallback');
