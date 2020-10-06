@@ -43,10 +43,10 @@ schema.statics.login = async function (username, password) {
         if (isPasswordMatch) {
             return user;
         } else {
-            throw new ErrorHandler(404, "Credential not match or user not found");
+            throw new ErrorHandler("Credential not match or user not found");
         }
     } else {
-        throw new ErrorHandler(404, "Credential not match or user not found");
+        throw new ErrorHandler("Credential not match or user not found");
     }
 }
 

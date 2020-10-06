@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { encryptData, decryptData } = require('../lib/https');
 
 class BaseController {
     constructor() {
@@ -10,6 +11,24 @@ class BaseController {
         return jwt.sign({ id }, this.tokenSecret, {
             expiresIn: this.tokenMaxAge,
         });
+    }
+
+    createSuccessResponse(rawData) {
+        return {
+            status: 'Success',
+            data: encryptData(rawData)
+        }
+    }
+
+    createFailResponse(rawData) {
+        return {
+            status: 'Error',
+            data: encryptData(rawData)
+        }
+    }
+
+    decryptRequestBody(requestBody) {
+        return decryptData(requestBody.payload);
     }
 }
 

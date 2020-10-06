@@ -11,13 +11,13 @@ class AuthController extends BaseController {
 
     async register_post(req, res, next) {
         try {
-            let { username, email, password } = req.body
+            let { username, email, password } = super.decryptRequestBody(req.body);
             let user = await UserModel.create({ username: username.trim(), email: email.trim(), password });
             if (user) {
                 let token = super.createToken(user._id);
                 user.password = undefined;
-                res.cookie('jwt', token, { httpOnly: true, maxAge: this.tokenMaxAge * 1000 });
-                res.status(200).json({ userData: user });
+                res.cookie('jwt', token, { httpOnly: true, maxAge: this.tokenMaxAge * 1000, secure: req.protocol === 'https'});
+                res.status(200).json(super.createSuccessResponse({ userData: user }));
             }
         } catch (error) {
             logIfDebug("authController.js", 23, error);
@@ -27,11 +27,12 @@ class AuthController extends BaseController {
 
     async login_post(req, res, next) {
         try {
-            let user = await UserModel.login(req.body.username.trim(), req.body.password);
+            let requestBody = super.decryptRequestBody(req.body);
+            let user = await UserModel.login(requestBody.username.trim(), requestBody.password);
             let token = this.createToken(user._id);
             user.password = undefined;
             res.cookie('jwt', token, { httpOnly: true, maxAge: this.tokenMaxAge * 1000 });
-            res.status(200).json({ userData: user });
+            res.status(200).json(super.createSuccessResponse({ userData: user }));
         } catch (error) {
             logIfDebug("authController.js", 36, error);
             next(error);
