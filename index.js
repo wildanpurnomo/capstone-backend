@@ -1,6 +1,13 @@
 const express = require('express');
 const app = express();
 
+// Enable trust proxy (resolving some https issue).
+app.enable('trust proxy');
+
+// Cookie parser
+const cookieParser = require('cookie-parser');
+app.use(cookieParser());
+
 // HTTPS Redirection
 const { redirectToSecure } = require('./lib/https');
 app.use(redirectToSecure);

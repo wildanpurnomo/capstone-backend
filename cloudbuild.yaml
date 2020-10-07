@@ -20,7 +20,7 @@ steps:
 - name: 'gcr.io/cloud-builders/kubectl'
   args: ['apply', '-f', 'k8s/']
   env:
-  - 'CLOUDSDK_COMPUTE_ZONE=asia-southeast2-a'
+  - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
   - 'CLOUDSDK_CONTAINER_CLUSTER=capstone-similarity-check'
 # step 4
 - name: 'gcr.io/cloud-builders/kubectl'
@@ -32,7 +32,7 @@ steps:
     'capstone-backend=gcr.io/$PROJECT_ID/capstone-backend:$BRANCH_NAME-$COMMIT_SHA'
   ]
   env:
-  - 'CLOUDSDK_COMPUTE_ZONE=asia-southeast2-a'
+  - 'CLOUDSDK_COMPUTE_ZONE=us-central1-c'
   - 'CLOUDSDK_CONTAINER_CLUSTER=capstone-similarity-check'
 #push images to Registry with tag
 images: [

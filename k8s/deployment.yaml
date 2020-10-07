@@ -5,7 +5,7 @@ metadata:
         run: capstone-backend
     name: capstone-backend
 spec:
-    replicas: 3
+    replicas: 1
     selector: 
         matchLabels:
             run: capstone-backend
@@ -19,3 +19,24 @@ spec:
               name: capstone-backend
               ports:
               - containerPort: 3000
+              env:
+                - name: EXPRESS_ALLOWED_ORIGINS
+                  valueFrom:
+                    configMapKeyRef:
+                        name: express-config
+                        key: EXPRESS_ALLOWED_ORIGINS
+                - name: EXPRESS_CRYPTO_KEY
+                  valueFrom:
+                    secretKeyRef:
+                        name: express-secret
+                        key: EXPRESS_CRYPTO_KEY
+                - name: EXPRESS_JWT_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                        name: express-secret
+                        key: EXPRESS_JWT_SECRET
+                - name: EXPRESS_MONGODB_URI
+                  valueFrom:
+                    secretKeyRef:
+                        name: express-secret
+                        key: EXPRESS_MONGODB_URI
