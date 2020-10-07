@@ -13,6 +13,11 @@ class BaseController {
         });
     }
 
+    verifyToken(req) {
+        let token = req.cookies.jwt;
+        return jwt.verify(token, this.tokenSecret);
+    }
+
     createSuccessResponse(rawData) {
         return {
             status: 'Success',
