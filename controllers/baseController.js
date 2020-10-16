@@ -15,25 +15,28 @@ class BaseController {
 
     verifyToken(req) {
         let token = req.cookies.jwt;
-        return jwt.verify(token, this.tokenSecret);
+        let decoded = jwt.verify(token, this.tokenSecret);
+        if (decoded.name) req.payloadName = decoded.name;
+        return decoded;
     }
 
     createSuccessResponse(rawData) {
         return {
             status: 'Success',
-            data: encryptData(rawData)
+            data: this.payloadName ? rawData : encryptData(rawData)
         }
     }
 
     createFailResponse(rawData) {
         return {
             status: 'Error',
-            data: encryptData(rawData)
+            data: this.payloadName ? rawData : encryptData(rawData)
         }
     }
 
     decryptRequestBody(requestBody) {
-        return decryptData(requestBody.payload);
+        this.payloadName = "tes";
+        return this.payloadName ? requestBody : decryptData(requestBody.payload);
     }
 }
 

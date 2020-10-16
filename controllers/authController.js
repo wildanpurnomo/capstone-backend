@@ -13,7 +13,6 @@ class AuthController extends BaseController {
 
     async register_post(req, res, next) {
         try {
-            let origin = req.headers['origin'];
             let { username, email, password } = super.decryptRequestBody(req.body);
             let user = await UserModel.create({ username: username.trim(), email: email.trim(), password });
             if (user) {
@@ -30,7 +29,6 @@ class AuthController extends BaseController {
 
     async login_post(req, res, next) {
         try {
-            let origin = req.headers['origin'];
             let requestBody = super.decryptRequestBody(req.body);
             let user = await UserModel.login(requestBody.username.trim(), requestBody.password);
             let token = this.createToken(user._id);

@@ -1,6 +1,9 @@
 const express = require('express');
 const app = express();
 
+// dotenv for VPS
+require('dotenv').config();
+
 // Enable trust proxy (resolving some https issue)
 app.enable('trust proxy');
 
@@ -43,18 +46,20 @@ app.use(logger('dev'));
 
 // use REST API router
 const authRouter = require('./routes/authRoutes');
+const folderRouter = require('./routes/folderRoutes');
 app.use('/api', authRouter);
+app.use('/api', folderRouter);
 
 // Use Error Middleware
 const { handleError } = require('./lib/error');
 app.use((err, req, res, next) => {
-    handleError(err, res);
+    handleError(err, req, res);
 });
 
 // Start server upon connected to DB
 const mongoose = require('mongoose');
 const dbUri = process.env.EXPRESS_MONGODB_URI || "mongodb://localhost/masihsukadia";
-mongoose.connect(dbUri, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true })
+mongoose.connect(dbUri, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false })
     .then((result) => {
         const PORT = process.env.PORT || 3000;
         app.listen(PORT, () => {

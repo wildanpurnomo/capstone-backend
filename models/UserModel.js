@@ -14,12 +14,14 @@ const schema = new mongoose.Schema({
         required: [true, "Email must be provided"],
         unique: true,
         lowercase: true,
+        trim: true,
         match: [emailRegex, "Please submit valid email"],
     },
     username: {
         type: String,
         required: [true, "Username must be provided"],
         unique: true,
+        trim: true,
         minlength: [usernameMinLength, `Username must be at least ${usernameMinLength} characters`]
     },
     password: {
