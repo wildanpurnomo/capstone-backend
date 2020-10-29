@@ -16,7 +16,10 @@ class BaseController {
     verifyToken(req) {
         let token = req.cookies.jwt;
         let decoded = jwt.verify(token, this.tokenSecret);
-        if (decoded.name) req.payloadName = decoded.name;
+        if (decoded.name) {
+            this.payloadName = decoded.name;
+            req.payloadName = decoded.name;
+        }
         return decoded;
     }
 
@@ -35,7 +38,6 @@ class BaseController {
     }
 
     decryptRequestBody(requestBody) {
-        this.payloadName = "tes";
         return this.payloadName ? requestBody : decryptData(requestBody.payload);
     }
 }

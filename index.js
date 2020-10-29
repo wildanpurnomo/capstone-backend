@@ -47,8 +47,10 @@ app.use(logger('dev'));
 // use REST API router
 const authRouter = require('./routes/authRoutes');
 const folderRouter = require('./routes/folderRoutes');
+const bucketRouter = require('./routes/bucketRoutes');
 app.use('/api', authRouter);
 app.use('/api', folderRouter);
+app.use('/api', bucketRouter);
 
 // Use Error Middleware
 const { handleError } = require('./lib/error');

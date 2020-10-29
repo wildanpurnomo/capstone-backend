@@ -117,3 +117,9 @@ out
 
 # FE code
 frontend
+
+# Secrets
+gcloudkey.json
+
+# env
+.env
