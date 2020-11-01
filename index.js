@@ -36,7 +36,7 @@ app.use(history({
     ]
 }));
 app.use(express.static('public/dist'));
-app.get('/', (req, res) => {
+app.get('/', (_, res) => {
     res.sendFile(path.join(__dirname, 'public/dist'));
 });
 
@@ -48,13 +48,15 @@ app.use(logger('dev'));
 const authRouter = require('./routes/authRoutes');
 const folderRouter = require('./routes/folderRoutes');
 const bucketRouter = require('./routes/bucketRoutes');
+const classroomRouter = require('./routes/classroomRoutes');
 app.use('/api', authRouter);
 app.use('/api', folderRouter);
 app.use('/api', bucketRouter);
+app.use('/api', classroomRouter);
 
 // Use Error Middleware
 const { handleError } = require('./lib/error');
-app.use((err, req, res, next) => {
+app.use((err, req, res, _) => {
     handleError(err, req, res);
 });
 
@@ -62,7 +64,7 @@ app.use((err, req, res, next) => {
 const mongoose = require('mongoose');
 const dbUri = process.env.EXPRESS_MONGODB_URI || "mongodb://localhost/masihsukadia";
 mongoose.connect(dbUri, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false })
-    .then((result) => {
+    .then((_) => {
         const PORT = process.env.PORT || 3000;
         app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);

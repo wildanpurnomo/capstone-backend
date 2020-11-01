@@ -1,5 +1,4 @@
 const { ErrorHandler } = require('../lib/error');
-const { logIfDebug } = require('../lib/logger');
 const FolderModel = require('../models/FolderModel');
 const BaseController = require('./baseController');
 
@@ -23,7 +22,7 @@ class FolderController extends BaseController {
                 throw new ErrorHandler("Session expired");
             }
         } catch (error) {
-            logIfDebug("folderController.js at fetchByUserId_get", error);
+            super.logMessage("folderController.js at fetchByUserId_get", error);
             next(error);
         }
     }
@@ -38,7 +37,7 @@ class FolderController extends BaseController {
                 throw new ErrorHandler("Session expired");
             }
         } catch (error) {
-            logIfDebug("folderController.js at addFolder_post", error);
+            super.logMessage("folderController.js at addFolder_post", error);
             next(error);
         }
     }
@@ -53,7 +52,7 @@ class FolderController extends BaseController {
                 throw new ErrorHandler("Session expired");
             }
         } catch (error) {
-            logIfDebug("folderController.js at editFolder_put", error);
+            super.logMessage("folderController.js at editFolder_put", error);
             next(error);
         }
     }
@@ -68,7 +67,7 @@ class FolderController extends BaseController {
                 throw new ErrorHandler("Session expired");
             }
         } catch (error) {
-            logIfDebug("folderController.js at deleteFolder_delete", error);
+            super.logMessage("folderController.js at deleteFolder_delete", error);
             next(error);
         }
 

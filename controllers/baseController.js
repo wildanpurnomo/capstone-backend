@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const { logIfDebug } = require('../lib/logger');
 const { encryptData, decryptData } = require('../lib/https');
 
 class BaseController {
@@ -9,6 +10,12 @@ class BaseController {
 
     createToken(id) {
         return jwt.sign({ id }, this.tokenSecret, {
+            expiresIn: this.tokenMaxAge,
+        });
+    }
+
+    createTokenGoogleLogin(id, googleApisToken) {
+        return jwt.sign({ id, googleApisToken }, this.tokenSecret, {
             expiresIn: this.tokenMaxAge,
         });
     }
@@ -39,6 +46,10 @@ class BaseController {
 
     decryptRequestBody(requestBody) {
         return this.payloadName ? requestBody : decryptData(requestBody.payload);
+    }
+
+    logMessage(message, error) {
+        logIfDebug(message, error);
     }
 }
 

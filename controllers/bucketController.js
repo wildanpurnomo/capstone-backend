@@ -1,5 +1,4 @@
 const { ErrorHandler } = require('../lib/error');
-const { logIfDebug } = require('../lib/logger');
 const BucketModel = require('../models/BucketModel');
 const BaseController = require('./baseController');
 const path = require('path');
@@ -32,7 +31,7 @@ class BucketController extends BaseController {
                 throw new ErrorHandler("Session expired");
             }
         } catch (error) {
-            logIfDebug("bucketController.js at fetchBucket_get", error);
+            super.logMessage("bucketController.js at fetchBucket_get", error);
             next(error);
         }
     }
@@ -58,14 +57,14 @@ class BucketController extends BaseController {
                         let fileType = path.extname(file.originalname);
                         let gcsName = `user_${creatorId}_folder_${folderId}_${Date.now()}${fileType}`;
                         let blob = bucket.file(gcsName);
-    
+
                         let promise = new Promise((resolve, reject) => {
                             let blobStream = blob.createWriteStream();
-    
+
                             blobStream.on('error', err => {
                                 reject(err);
                             });
-    
+
                             blobStream.on('finish', async () => {
                                 try {
                                     let toBeSaved = {
@@ -81,16 +80,16 @@ class BucketController extends BaseController {
                                     reject(error);
                                 }
                             });
-    
+
                             blobStream.end(file.buffer);
                         });
-    
+
                         promises.push(promise);
                     }
                 });
 
                 Promise.all(promises)
-                    .then( async _ => {
+                    .then(async _ => {
                         let bucketList = await BucketModel.find({ creatorId: creatorId, folderId: folderId });
                         res.status(200).json(super.createSuccessResponse({ bucketData: bucketList }));
                     })
@@ -101,16 +100,16 @@ class BucketController extends BaseController {
                 throw new ErrorHandler("Session expired");
             }
         } catch (error) {
-            logIfDebug("bucketController.js at saveBucket_post", error);
+            super.logMessage("bucketController.js at saveBucket_post", error);
             next(error);
         }
     }
 
     isDuplicateFileName(currentBucketList, fileName) {
-        let filteredByName = currentBucketList.filter( bucket => {
+        let filteredByName = currentBucketList.filter(bucket => {
             return bucket.documentOriginalName === fileName;
         });
-        
+
         return filteredByName.length > 0;
     }
 }
