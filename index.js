@@ -49,10 +49,12 @@ const authRouter = require('./routes/authRoutes');
 const folderRouter = require('./routes/folderRoutes');
 const bucketRouter = require('./routes/bucketRoutes');
 const classroomRouter = require('./routes/classroomRoutes');
+const analyticsRouter = require('./routes/analyticsRoutes');
 app.use('/api', authRouter);
 app.use('/api', folderRouter);
 app.use('/api', bucketRouter);
 app.use('/api', classroomRouter);
+app.use('/api', analyticsRouter);
 
 // Use Error Middleware
 const { handleError } = require('./lib/error');

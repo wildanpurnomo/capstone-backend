@@ -123,3 +123,9 @@ gcloudkey.json
 
 # env
 .env
+
+# generated docx file
+*.docx
+
+# generated pdf file
+*.pdf

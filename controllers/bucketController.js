@@ -94,7 +94,8 @@ class BucketController extends BaseController {
                         res.status(200).json(super.createSuccessResponse({ bucketData: bucketList }));
                     })
                     .catch(err => {
-                        throw err;
+                        super.logMessage("bucketController.js at saveBucket_post", err);
+                        next(err);
                     });
             } else {
                 throw new ErrorHandler("Session expired");
