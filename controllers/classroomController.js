@@ -45,7 +45,7 @@ class ClassroomController extends BaseController {
                 let token = decoded.googleApisToken;
                 oauth2Client.setCredentials(token);
 
-                let { courseId } = super.decryptRequestBody(req.body);
+                let { courseId } = req.body;
                 let classroom = google.classroom({ version: 'v1', auth: oauth2Client });
                 let listSubmissionResponse = await classroom.courses.courseWork.studentSubmissions.list({
                     courseId: courseId,

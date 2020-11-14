@@ -11,10 +11,6 @@ app.enable('trust proxy');
 const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
-// HTTPS Redirection
-const { redirectToSecure } = require('./lib/https');
-app.use(redirectToSecure);
-
 // BodyParser Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -67,7 +63,7 @@ const mongoose = require('mongoose');
 const dbUri = process.env.EXPRESS_MONGODB_URI || "mongodb://localhost/masihsukadia";
 mongoose.connect(dbUri, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true, useFindAndModify: false })
     .then((_) => {
-        const PORT = process.env.PORT || 3000;
+        const PORT = process.env.PORT || 4000;
         app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
         });

@@ -15,8 +15,7 @@ class FolderController extends BaseController {
         try {
             let decoded = this.verifyToken(req);
             if (decoded) {
-                let { creatorId } = super.decryptRequestBody(req.body);
-                let folderList = await FolderModel.find({ creatorId: creatorId });
+                let folderList = await FolderModel.find({ creatorId: decoded.id });
                 res.status(200).json(super.createSuccessResponse({ folderList: folderList }));
             } else {
                 throw new ErrorHandler("Session expired");
@@ -31,7 +30,8 @@ class FolderController extends BaseController {
         try {
             let decoded = this.verifyToken(req);
             if (decoded) {
-                let folder = await FolderModel.add(super.decryptRequestBody(req.body));
+                req.body.creatorId = decoded.id;
+                let folder = await FolderModel.add(req.body);
                 res.status(200).json(super.createSuccessResponse({ folderData: folder }));
             } else {
                 throw new ErrorHandler("Session expired");
@@ -46,7 +46,7 @@ class FolderController extends BaseController {
         try {
             let decoded = this.verifyToken(req);
             if (decoded) {
-                let folder = await FolderModel.findOneAndUpdate({ _id: req.params.folderId }, super.decryptRequestBody(req.body), { new: true });
+                let folder = await FolderModel.findOneAndUpdate({ _id: req.params.folderId }, req.body, { new: true });
                 res.status(200).json(super.createSuccessResponse({ folderData: folder }));
             } else {
                 throw new ErrorHandler("Session expired");

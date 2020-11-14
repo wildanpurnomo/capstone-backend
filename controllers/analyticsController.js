@@ -13,7 +13,7 @@ class AnalyticsController extends BaseController {
         try {
             let decoded = this.verifyToken(req);
             if (decoded) {
-                let { documents, threshold } = super.decryptRequestBody(req.body);
+                let { documents, threshold } = req.body;
                 this.validateClientInput(documents, threshold);
 
                 let promises = [];

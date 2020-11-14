@@ -9,7 +9,7 @@ const multerInstance = Multer({
     }
 });
 
-router.get('/documents', bucketController.fetchBucket_get);
+router.get('/documents/:folderId', bucketController.fetchPersonalBucket_get);
 router.post('/documents', multerInstance.fields([{ name: 'docs', maxCount: 20}]), bucketController.saveBucket_post);
 
 module.exports = router;

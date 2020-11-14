@@ -11,16 +11,17 @@ class AuthController extends BaseController {
         this.authenticate_get = this.authenticate_get.bind(this);
         this.processOauth_get = this.processOauth_get.bind(this);
         this.getGoogleAuthUrl_get = this.getGoogleAuthUrl_get.bind(this);
+        this.logout_post = this.logout_post.bind(this);
     }
 
     async register_post(req, res, next) {
         try {
-            let { username, email, password } = super.decryptRequestBody(req.body);
+            let { username, email, password } = req.body;
             let user = await UserModel.create({ username: username.trim(), email: email.trim(), password });
             if (user) {
                 let token = super.createToken(user._id);
                 user.password = undefined;
-                res.cookie('jwt', token, { httpOnly: true, maxAge: this.tokenMaxAge * 1000, secure: true, sameSite: 'none' });
+                res.cookie('jwt', token, super.generateCookieOption());
                 res.status(200).json(super.createSuccessResponse({ userData: user }));
             }
         } catch (error) {
@@ -31,11 +32,11 @@ class AuthController extends BaseController {
 
     async login_post(req, res, next) {
         try {
-            let requestBody = super.decryptRequestBody(req.body);
+            let requestBody = req.body;
             let user = await UserModel.login(requestBody.username.trim(), requestBody.password);
             let token = this.createToken(user._id);
             user.password = undefined;
-            res.cookie('jwt', token, { httpOnly: true, maxAge: this.tokenMaxAge * 1000, secure: true, sameSite: 'none' });
+            res.cookie('jwt', token, super.generateCookieOption());
             res.status(200).json(super.createSuccessResponse({ userData: user }));
         } catch (error) {
             super.logMessage("authController.js at login_post", error);
@@ -43,7 +44,7 @@ class AuthController extends BaseController {
         }
     }
 
-    getGoogleAuthUrl_get(req, res, _) {
+    getGoogleAuthUrl_get(req, res, next) {
         try {
             let decoded = this.verifyToken(req);
             if (decoded) {
@@ -87,7 +88,7 @@ class AuthController extends BaseController {
             let userProfileResponse = await classroom.userProfiles.get({ userId: 'me' });
             let jwtToken = super.createTokenGoogleLogin(userProfileResponse.data.id, googleApisToken.tokens);
 
-            res.cookie('jwt', jwtToken, { httpOnly: true, maxAge: this.tokenMaxAge * 1000, secure: true, sameSite: 'none' });
+            res.cookie('jwt', jwtToken, super.generateCookieOption());
             res.redirect(`http://${req.headers.host}/main`);
         } catch (error) {
             super.logMessage("authController at processOauth_get", error);
@@ -95,9 +96,15 @@ class AuthController extends BaseController {
         }
     }
 
-    logout_post(_, res) {
-        res.clearCookie('jwt');
-        res.status(200).json(super.createSuccessResponse({ message: 'Successfully logged user out' }));
+    logout_post(req, res) {
+        try {
+            res.cookie('jwt', '', super.generateCookieOption({ isLogout: true }));
+            res.status(200).json(super.createSuccessResponse({ message: 'Successfully logged user out' }));
+        } catch (error) {
+            super.logMessage("authController at logout_post", error);
+            next(error);
+        }
+
     }
 
     async authenticate_get(req, res, next) {

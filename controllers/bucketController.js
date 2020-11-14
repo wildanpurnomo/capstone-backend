@@ -13,19 +13,15 @@ const storage = new Storage({
 class BucketController extends BaseController {
     constructor() {
         super();
-        this.fetchBucket_get = this.fetchBucket_get.bind(this);
+        this.fetchPersonalBucket_get = this.fetchPersonalBucket_get.bind(this);
         this.saveBucket_post = this.saveBucket_post.bind(this);
     }
 
-    async fetchBucket_get(req, res, next) {
+    async fetchPersonalBucket_get(req, res, next) {
         try {
             let decoded = this.verifyToken(req);
             if (decoded) {
-                let { creatorId, folderId } = super.decryptRequestBody(req.body);
-                if (!creatorId || !folderId) {
-                    throw new ErrorHandler("No creatorId or folderId");
-                }
-                let bucketList = await BucketModel.find({ creatorId: creatorId, folderId: folderId });
+                let bucketList = await BucketModel.find({ creatorId: decoded.id, folderId: req.params.folderId });
                 res.status(200).json(super.createSuccessResponse({ bucketData: bucketList }));
             } else {
                 throw new ErrorHandler("Session expired");
@@ -44,7 +40,7 @@ class BucketController extends BaseController {
                     throw new ErrorHandler("No uploaded docs");
                 }
 
-                let { creatorId, folderId } = super.decryptRequestBody(req.body);
+                let { creatorId, folderId } = req.body;
                 if (!creatorId || !folderId) {
                     throw new ErrorHandler("No creatorId or folderId");
                 }
