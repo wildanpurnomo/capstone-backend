@@ -24,8 +24,8 @@ def Vectorizing(input, similarity):
     for i in range(len(J)):
         for j in range(len(J[i])):
             if J[i][j] > similarity and i != j:
-                updateArray = {x+1: {'index': {i, j},
-                                     'similarity': "{:.2%}".format(J[i][j])}}
+                updateArray = {"result_" + str(x+1): {"index": { "firstDoc": i, "secondDoc": j},
+                                     "similarity": "{:.2%}".format(J[i][j])}}
                 x += 1
                 similarityArray.update(updateArray)
 
@@ -35,7 +35,7 @@ def Vectorizing(input, similarity):
             result[key] = value
 
     if bool(result) == False:
-        result = 'Tidak ada kalimat yang mirip'
+        result = "Tidak ada kalimat yang mirip"
 
     return result
 

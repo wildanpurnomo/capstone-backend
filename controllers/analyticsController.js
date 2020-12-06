@@ -33,7 +33,19 @@ class AnalyticsController extends BaseController {
 
                         this.processAnalytics(inputObject, threshold)
                             .then(result => {
-                                res.status(200).json(super.createSuccessResponse({ result }));
+                                if (result.includes("Tidak ada")) {
+                                    res.status(200).json(super.createSuccessResponse({ message: "Tidak dideteksi plagiasi", report: [] }));
+                                } else {
+                                    let jsonResult = JSON.parse(result.replace(/'/g, '"'));
+                                    let optimized = [];
+                                    Object.keys(jsonResult).forEach(key => {
+                                        optimized.push({
+                                            index: jsonResult[key].index,
+                                            similarity: jsonResult[key].similarity
+                                        });
+                                    });
+                                    res.status(200).json(super.createSuccessResponse({ message: "Plagiasi terdeteksi" , report: optimized }));
+                                }
                             })
                             .catch(error => {
                                 super.logMessage("analyticsController.js at processDocuments_post", error);
@@ -74,8 +86,12 @@ class AnalyticsController extends BaseController {
     processDocx(url) {
         return new Promise((resolve, reject) => {
             let process = spawn('python', [path.join(__dirname, '/../pythonScripts/processDocx.py'), url]);
+            let result = "";
             process.stdout.on('data', data => {
-                resolve(data.toString());
+                result += data.toString();
+            });
+            process.stdout.on('end', () => {
+                resolve(result);
             });
             process.stderr.on('data', data => {
                 reject(data.toString());
@@ -89,8 +105,12 @@ class AnalyticsController extends BaseController {
     processPdf(url) {
         return new Promise((resolve, reject) => {
             let process = spawn('python', [path.join(__dirname, '/../pythonScripts/processPDF.py'), url]);
+            let result = "";
             process.stdout.on('data', data => {
-                resolve(data.toString());
+                result += data.toString();
+            });
+            process.stdout.on('end', () => {
+                resolve(result);
             });
             process.stderr.on('data', data => {
                 reject(data.toString());
