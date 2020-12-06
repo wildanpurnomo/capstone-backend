@@ -80,6 +80,9 @@ class AnalyticsController extends BaseController {
             process.stderr.on('data', data => {
                 reject(data.toString());
             });
+            process.on('error', err => {
+                reject(err.toString());
+            });
         });
     }
 
@@ -91,7 +94,10 @@ class AnalyticsController extends BaseController {
             });
             process.stderr.on('data', data => {
                 reject(data.toString());
-            })
+            });
+            process.on('error', err => {
+                reject(err.toString());
+            });
         })
     }
 
