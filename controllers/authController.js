@@ -45,40 +45,32 @@ class AuthController extends BaseController {
     }
 
     getGoogleAuthUrl_get(req, res, next) {
-        try {
-            let decoded = this.verifyToken(req);
-            if (decoded) {
-                let scopes = [
-                    'https://www.googleapis.com/auth/classroom.rosters.readonly',
-                    'https://www.googleapis.com/auth/classroom.courses.readonly',
-                    'https://www.googleapis.com/auth/classroom.coursework.students.readonly'
-                ];
-                let oauth2Client = new google.auth.OAuth2(
-                    process.env.GOOGLEAPIS_CLIENT_SECRET,
-                    process.env.GOOGLEAPIS_CLIENT_ID,
-                    `http://${req.headers.host}/api/auth/withgoogle`
-                );
-                let authUrl = oauth2Client.generateAuthUrl({
-                    access_type: 'offline',
-                    scope: scopes,
-                });
+        let scopes = [
+            'https://www.googleapis.com/auth/classroom.rosters.readonly',
+            'https://www.googleapis.com/auth/classroom.courses.readonly',
+            'https://www.googleapis.com/auth/classroom.coursework.students.readonly'
+        ];
+        let redirectUrl = req.headers.host.includes("localhost") ? `http://${req.headers.host}/api/auth/withgoogle` : `https://${req.headers.host}/api/auth/withgoogle`
+        let oauth2Client = new google.auth.OAuth2(
+            process.env.GOOGLEAPIS_CLIENT_SECRET,
+            process.env.GOOGLEAPIS_CLIENT_ID,
+            redirectUrl
+        );
+        let authUrl = oauth2Client.generateAuthUrl({
+            access_type: 'offline',
+            scope: scopes,
+        });
 
-                res.status(200).json(super.createSuccessResponse({ authUrl }));
-            } else {
-                throw new ErrorHandler("Session expired");
-            }
-        } catch (error) {
-            super.logMessage("authController.js at getGoogleAuthUrl_get", error);
-            next(error);
-        }
+        res.status(200).json(super.createSuccessResponse({ authUrl }));
     }
 
     async processOauth_get(req, res, next) {
         try {
+            let redirectUrl = req.headers.host.includes("localhost") ? `http://${req.headers.host}/api/auth/withgoogle` : `https://${req.headers.host}/api/auth/withgoogle`
             let oauth2Client = new google.auth.OAuth2(
                 process.env.GOOGLEAPIS_CLIENT_SECRET,
                 process.env.GOOGLEAPIS_CLIENT_ID,
-                `http://${req.headers.host}/api/auth/withgoogle`
+                redirectUrl
             );
             let code = req.query.code;
             let googleApisToken = await oauth2Client.getToken(code);
@@ -112,16 +104,18 @@ class AuthController extends BaseController {
             let decoded = this.verifyToken(req);
             if (decoded) {
                 if (decoded.googleApisToken) {
+                    let redirectUrl = req.headers.host.includes("localhost") ? `http://${req.headers.host}/api/auth/withgoogle` : `https://${req.headers.host}/api/auth/withgoogle`
                     let oauth2Client = new google.auth.OAuth2(
                         process.env.GOOGLEAPIS_CLIENT_SECRET,
                         process.env.GOOGLEAPIS_CLIENT_ID,
-                        `http://${req.headers.host}/api/auth/withgoogle`
+                        redirectUrl
                     );
                     oauth2Client.setCredentials(decoded.googleApisToken);
 
                     let classroom = google.classroom({ version: 'v1', auth: oauth2Client });
                     let userProfileResponse = await classroom.userProfiles.get({ userId: 'me' });
-                    res.status(200).json(super.createSuccessResponse({ userData: userProfileResponse.data }));
+                    let userProfile = userProfileResponse.data;
+                    res.status(200).json(super.createSuccessResponse({ userData: { _id: userProfile.id, username: userProfile.name.fullName } }));
                 } else {
                     let user = await UserModel.findById(decoded.id);
                     user.password = undefined;
