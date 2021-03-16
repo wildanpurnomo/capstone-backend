@@ -81,7 +81,7 @@ class AuthController extends BaseController {
             let jwtToken = super.createTokenGoogleLogin(userProfileResponse.data.id, googleApisToken.tokens);
 
             res.cookie('jwt', jwtToken, super.generateCookieOption());
-            res.redirect(`http://${req.headers.host}/main`);
+            res.redirect(`https://${req.headers.host}/main`);
         } catch (error) {
             super.logMessage("authController at processOauth_get", error);
             next(error);

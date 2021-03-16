@@ -1,0 +1,2 @@
+(window["webpackJsonp"]=window["webpackJsonp"]||[]).push([["chunk-2d21b4fa"],{bede:function(n,e,a){"use strict";a.r(e);var t=function(){var n=this,e=n.$createElement,a=n._self._c||e;return a("h1",[n._v("Landing Page")])},u=[],c={name:"LandingView"},i=c,l=a("2877"),r=Object(l["a"])(i,t,u,!1,null,null,null);e["default"]=r.exports}}]);
+//# sourceMappingURL=chunk-2d21b4fa.a50b93cb.js.map
