@@ -16,8 +16,8 @@ class AuthController extends BaseController {
 
     async register_post(req, res, next) {
         try {
-            let { username, email, password } = req.body;
-            let user = await UserModel.create({ username: username.trim(), email: email.trim(), password });
+            let { username, password } = req.body;
+            let user = await UserModel.create({ username: username.trim(), password: password });
             if (user) {
                 let token = super.createToken(user._id);
                 user.password = undefined;
@@ -32,8 +32,8 @@ class AuthController extends BaseController {
 
     async login_post(req, res, next) {
         try {
-            let requestBody = req.body;
-            let user = await UserModel.login(requestBody.username.trim(), requestBody.password);
+            let { username, password } = req.body;
+            let user = await UserModel.login(username.trim(), password);
             let token = this.createToken(user._id);
             user.password = undefined;
             res.cookie('jwt', token, super.generateCookieOption());

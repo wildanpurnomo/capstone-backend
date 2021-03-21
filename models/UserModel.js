@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const { ErrorHandler } = require('../lib/error');
-const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
 const usernameMinLength = 6
 const passwordConfig = {
     passwordRegex: /(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])/,
@@ -9,14 +8,6 @@ const passwordConfig = {
 }
 
 const schema = new mongoose.Schema({
-    email: {
-        type: String,
-        required: [true, "Email must be provided"],
-        unique: true,
-        lowercase: true,
-        trim: true,
-        match: [emailRegex, "Please submit valid email"],
-    },
     username: {
         type: String,
         required: [true, "Username must be provided"],
