@@ -40,7 +40,9 @@ class BucketController extends BaseController {
                     throw new ErrorHandler("No uploaded docs");
                 }
 
-                let { creatorId, folderId } = req.body;
+                let creatorId = decoded.id;
+                let { folderId } = req.body;
+
                 if (!creatorId || !folderId) {
                     throw new ErrorHandler("No creatorId or folderId");
                 }
