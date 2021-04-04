@@ -3,7 +3,7 @@ const BucketModel = require('../models/BucketModel');
 const BaseController = require('./baseController');
 const path = require('path');
 const { Storage } = require('@google-cloud/storage');
-
+const bcrypt = require('bcrypt');
 const CLOUD_BUCKET = process.env.CLOUD_BUCKET;
 const storage = new Storage({
     projectId: process.env.GCLOUD_PROJECT_ID,
@@ -45,49 +45,44 @@ class BucketController extends BaseController {
                     throw new ErrorHandler("No creatorId or folderId");
                 }
 
-                let currentBucketList = await BucketModel.find({ creatorId: creatorId, folderId: folderId });
                 let bucket = storage.bucket(CLOUD_BUCKET);
                 let promises = [];
-                req.files['docs'].forEach((file, _) => {
-                    if (!this.isDuplicateFileName(currentBucketList, file.originalname)) {
+                let salt = await bcrypt.genSalt();
+
+                req.files['docs'].forEach((file) => {
+                    promises.push(new Promise(async (resolve, reject) => {
                         let fileType = path.extname(file.originalname);
-                        let gcsName = `user_${creatorId}_folder_${folderId}_${Date.now()}${fileType}`;
+                        let hashed = await bcrypt.hash(file.originalname, salt);
+                        let gcsName = `${hashed}${fileType}`;
                         let blob = bucket.file(gcsName);
+                        let blobStream = blob.createWriteStream();
 
-                        let promise = new Promise((resolve, reject) => {
-                            let blobStream = blob.createWriteStream();
-
-                            blobStream.on('error', err => {
-                                reject(err);
-                            });
-
-                            blobStream.on('finish', async () => {
-                                try {
-                                    let toBeSaved = {
-                                        creatorId: creatorId,
-                                        folderId: folderId,
-                                        documentUrl: `${process.env.CLOUD_PUBLIC_BASE_URL}/${CLOUD_BUCKET}/${gcsName}`,
-                                        documentType: fileType,
-                                        documentOriginalName: file.originalname
-                                    };
-                                    await BucketModel.create(toBeSaved);
-                                    resolve();
-                                } catch (error) {
-                                    reject(error);
-                                }
-                            });
-
-                            blobStream.end(file.buffer);
+                        blobStream.on('error', err => {
+                            reject(err);
                         });
 
-                        promises.push(promise);
-                    }
+                        blobStream.on('finish', async () => {
+                            try {
+                                let toBeSaved = {
+                                    creatorId: creatorId,
+                                    folderId: folderId,
+                                    documentUrl: `${process.env.CLOUD_PUBLIC_BASE_URL}/${CLOUD_BUCKET}/${gcsName}`,
+                                    documentType: fileType,
+                                    documentOriginalName: file.originalname
+                                };
+                                resolve(await BucketModel.create(toBeSaved));
+                            } catch (error) {
+                                reject(error);
+                            }
+                        });
+
+                        blobStream.end(file.buffer);
+                    }));
                 });
 
                 Promise.all(promises)
-                    .then(async _ => {
-                        let bucketList = await BucketModel.find({ creatorId: creatorId, folderId: folderId });
-                        res.status(200).json(super.createSuccessResponse({ bucketData: bucketList }));
+                    .then(saved => {
+                        res.status(200).json(super.createSuccessResponse({ bucketData: saved }));
                     })
                     .catch(err => {
                         super.logMessage("bucketController.js at saveBucket_post", err);
