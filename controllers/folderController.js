@@ -1,5 +1,6 @@
 const { ErrorHandler } = require('../lib/error');
 const FolderModel = require('../models/FolderModel');
+const SlugModel = require('../models/SlugModel');
 const BaseController = require('./baseController');
 
 class FolderController extends BaseController {
@@ -15,7 +16,9 @@ class FolderController extends BaseController {
         try {
             let decoded = this.verifyToken(req);
             if (decoded) {
-                let folderList = await FolderModel.find({ creatorId: decoded.id });
+                let folderList = await FolderModel
+                    .find({ creatorId: decoded.id })
+                    .select('-creatorId');
                 res.status(200).json(super.createSuccessResponse({ folderList: folderList }));
             } else {
                 throw new ErrorHandler("Session expired");
@@ -32,6 +35,11 @@ class FolderController extends BaseController {
             if (decoded) {
                 req.body.creatorId = decoded.id;
                 let folder = await FolderModel.add(req.body);
+                await SlugModel.create({
+                    folderId: folder._id,
+                    folderSlug: req.body.folderName.trim().replace(/\s+/g, '-').toLowerCase()
+                });
+                folder.creatorId = undefined;
                 res.status(200).json(super.createSuccessResponse({ folderData: folder }));
             } else {
                 throw new ErrorHandler("Session expired");
@@ -47,6 +55,12 @@ class FolderController extends BaseController {
             let decoded = this.verifyToken(req);
             if (decoded) {
                 let folder = await FolderModel.findOneAndUpdate({ _id: req.params.folderId }, req.body, { new: true });
+                await SlugModel.findOneAndUpdate(
+                    { folderId: req.params.folderId },
+                    { folderName: { folderSlug: folder.folderName.replace(/\s+/g, '-').toLowerCase() } },
+                    { new: true }
+                );
+                folder.creatorId = undefined;
                 res.status(200).json(super.createSuccessResponse({ folderData: folder }));
             } else {
                 throw new ErrorHandler("Session expired");
@@ -62,6 +76,8 @@ class FolderController extends BaseController {
             let decoded = this.verifyToken(req);
             if (decoded) {
                 let deleted = await FolderModel.deleteOne({ _id: req.params.folderId });
+                await SlugModel.deleteOne({ folderId: req.params.folderId });
+                deleted.creatorId = undefined;
                 res.status(200).json(super.createSuccessResponse({ deletedFolder: deleted }));
             } else {
                 throw new ErrorHandler("Session expired");

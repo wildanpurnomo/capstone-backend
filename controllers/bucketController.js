@@ -1,5 +1,6 @@
 const { ErrorHandler } = require('../lib/error');
 const BucketModel = require('../models/BucketModel');
+const SlugModel = require('../models/SlugModel');
 const BaseController = require('./baseController');
 const path = require('path');
 const { Storage } = require('@google-cloud/storage');
@@ -14,6 +15,7 @@ class BucketController extends BaseController {
     constructor() {
         super();
         this.fetchPersonalBucket_get = this.fetchPersonalBucket_get.bind(this);
+        this.fetchPersonalBucketBySlug_get = this.fetchPersonalBucketBySlug_get.bind(this);
         this.saveBucket_post = this.saveBucket_post.bind(this);
     }
 
@@ -27,7 +29,27 @@ class BucketController extends BaseController {
                 throw new ErrorHandler("Session expired");
             }
         } catch (error) {
-            super.logMessage("bucketController.js at fetchBucket_get", error);
+            super.logMessage("bucketController.js at fetchPersonalBucket_get", error);
+            next(error);
+        }
+    }
+
+    async fetchPersonalBucketBySlug_get(req, res, next) {
+        try {
+            let decoded = this.verifyToken(req);
+            if (decoded) {
+                let slugModel = await SlugModel.findOne({ folderSlug: req.params.folderSlug });
+                let bucketList = await BucketModel.find({ creatorId: decoded.id, folderId: slugModel.folderId });
+                let bucketData = {
+                    folderId: slugModel.folderId,
+                    documents: bucketList
+                }
+                res.status(200).json(super.createSuccessResponse({ bucketData: bucketData }));
+            } else {
+                throw new ErrorHandler("Session expired");
+            }
+        } catch (error) {
+            super.logMessage("bucketController.js at fetchPersonalBucketBySlug_get", error);
             next(error);
         }
     }
