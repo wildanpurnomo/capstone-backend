@@ -94,7 +94,7 @@ class BucketController extends BaseController {
                                     documentType: fileType,
                                     documentOriginalName: file.originalname
                                 };
-                                resolve(await BucketModel.create(toBeSaved));
+                                resolve(toBeSaved);
                             } catch (error) {
                                 reject(error);
                             }
@@ -105,8 +105,9 @@ class BucketController extends BaseController {
                 });
 
                 Promise.all(promises)
-                    .then(saved => {
-                        res.status(200).json(super.createSuccessResponse({ bucketData: saved }));
+                    .then(async toBeSavedList => {
+                        let savedList = await BucketModel.create(toBeSavedList);
+                        res.status(200).json(super.createSuccessResponse({ bucketData: savedList }));
                     })
                     .catch(err => {
                         super.logMessage("bucketController.js at saveBucket_post", err);
