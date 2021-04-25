@@ -38,7 +38,7 @@ class BucketController extends BaseController {
         try {
             let decoded = this.verifyToken(req);
             if (decoded) {
-                let slugModel = await SlugModel.findOne({ folderSlug: req.params.folderSlug });
+                let slugModel = await SlugModel.findOne({ folderSlug: req.params.folderSlug + `-${decoded.id}` });
                 let bucketList = await BucketModel.find({ creatorId: decoded.id, folderId: slugModel.folderId });
                 let bucketData = {
                     folderId: slugModel.folderId,

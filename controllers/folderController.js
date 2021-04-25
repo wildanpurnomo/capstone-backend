@@ -1,6 +1,7 @@
 const { ErrorHandler } = require('../lib/error');
 const FolderModel = require('../models/FolderModel');
 const SlugModel = require('../models/SlugModel');
+const BucketModel = require('../models/BucketModel');
 const BaseController = require('./baseController');
 
 class FolderController extends BaseController {
@@ -37,7 +38,7 @@ class FolderController extends BaseController {
                 let folder = await FolderModel.add(req.body);
                 await SlugModel.create({
                     folderId: folder._id,
-                    folderSlug: req.body.folderName.trim().replace(/\s+/g, '-').toLowerCase()
+                    folderSlug: req.body.folderName.trim().replace(/\s+/g, '-').toLowerCase() + `-${decoded.id}`
                 });
                 folder.creatorId = undefined;
                 res.status(200).json(super.createSuccessResponse({ folderData: folder }));
@@ -57,7 +58,7 @@ class FolderController extends BaseController {
                 let folder = await FolderModel.findOneAndUpdate({ _id: req.params.folderId }, req.body, { new: true });
                 await SlugModel.findOneAndUpdate(
                     { folderId: req.params.folderId },
-                    { folderName: { folderSlug: folder.folderName.replace(/\s+/g, '-').toLowerCase() } },
+                    { folderSlug: folder.folderName.replace(/\s+/g, '-').toLowerCase() + `-${decoded.id}` },
                     { new: true }
                 );
                 folder.creatorId = undefined;
@@ -76,7 +77,8 @@ class FolderController extends BaseController {
             let decoded = this.verifyToken(req);
             if (decoded) {
                 let deleted = await FolderModel.deleteOne({ _id: req.params.folderId });
-                await SlugModel.deleteOne({ folderId: req.params.folderId });
+                SlugModel.deleteOne({ folderId: req.params.folderId });
+                BucketModel.deleteMany({ folderId: req.params.folderId });
                 deleted.creatorId = undefined;
                 res.status(200).json(super.createSuccessResponse({ deletedFolder: deleted }));
             } else {
@@ -86,7 +88,6 @@ class FolderController extends BaseController {
             super.logMessage("folderController.js at deleteFolder_delete", error);
             next(error);
         }
-
     }
 }
 
