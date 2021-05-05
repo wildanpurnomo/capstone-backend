@@ -1,12 +1,31 @@
 const { ErrorHandler } = require('../lib/error');
 const BaseController = require('./baseController');
 const axios = require('axios');
-const EPSILON = 0.00000000000000000001;
+const AnalyticResultModel = require('../models/AnalyticResultModel');
+const SlugModel = require('../models/SlugModel');
 
 class AnalyticsController extends BaseController {
     constructor() {
         super();
         this.processDocuments_post = this.processDocuments_post.bind(this);
+        this.getAnalyticResult_get = this.getAnalyticResult_get.bind(this);
+    }
+
+    async getAnalyticResult_get(req, res, next) {
+        try {
+            let decoded = this.verifyToken(req);
+            if (decoded) {
+                let slugModel = await SlugModel.findOne({ folderSlug: req.params.folderSlug + `-${decoded.id}` });
+                let result = await AnalyticResultModel.find({ folderId: slugModel.folderId });
+
+                res.status(200).json(super.createSuccessResponse(result));
+            } else {
+                throw new ErrorHandler("Session expired");
+            }
+        } catch (error) {
+            super.logMessage("analyticsController.js at getAnalyticResult_get", error);
+            next(error);
+        }
     }
 
     async processDocuments_post(req, res, next) {
@@ -23,13 +42,26 @@ class AnalyticsController extends BaseController {
                 let response = await axios.post(process.env.AI_SERVICE, requestBody);
                 if (response.status === 200) {
                     let result = this.clusterizedAnalyticResponse(response.data);
+
+                    if (req.body.folderSlug !== null || req.body.folderSlug !== undefined) {
+                        let slugModel = await SlugModel.findOneAndUpdate(
+                            { folderSlug: req.body.folderSlug + `-${decoded.id}` },
+                            result,
+                            { upsert: true, new: true, setDefaultOnInsert: true},
+                        );
+                        await AnalyticResultModel.create({
+                            folderId: slugModel.folderId,
+                            result: result
+                        });
+                    }
+
                     res.status(200).json(super.createSuccessResponse(result));
                 }
             } else {
                 throw new ErrorHandler("Session expired");
             }
         } catch (error) {
-            super.logMessage("analyticsController.js at processDocumentsV2_post", error);
+            super.logMessage("analyticsController.js at processDocuments_post", error);
             next(error);
         }
     }
@@ -72,7 +104,6 @@ class AnalyticsController extends BaseController {
 
         rawResponse.Similarity.forEach((item, index) => {
             let x = Math.round(parseFloat(item) * 100 ) / 100;
-            console.log(0.0 <= x <= 0.25)
             if (x <= 0.25) {
                 clusterized[0].pairingCount += 1;
                 clusterized[0].clusterPairIndex.push(rawResponse.Pair[index]);
@@ -108,14 +139,6 @@ class AnalyticsController extends BaseController {
             throw new ErrorHandler("documents must have at least 2 items");
         }
     }
-
-    isALessThanB(A, B) {
-		return (A - B < EPSILON) && (Math.abs(A - B) > EPSILON);
-	};
-
-	isAMoreThanB(A, B) {
-		return (A - B > EPSILON) && (Math.abs(A - B) > EPSILON);
-	};
 }
 
 module.exports = new AnalyticsController();
