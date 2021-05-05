@@ -17,6 +17,22 @@ class BucketController extends BaseController {
         this.fetchPersonalBucket_get = this.fetchPersonalBucket_get.bind(this);
         this.fetchPersonalBucketBySlug_get = this.fetchPersonalBucketBySlug_get.bind(this);
         this.saveBucket_post = this.saveBucket_post.bind(this);
+        this.deleteDocument_delete = this.deleteDocument_delete.bind(this);
+    }
+
+    async deleteDocument_delete(req, res, next) {
+        try {
+            let decoded = this.verifyToken(req);
+            if (decoded) {
+                let deleted = await BucketModel.deleteOne({ _id: req.params.documentId });
+                res.status(200).json(super.createSuccessResponse({ deleted }));
+            } else {
+                throw new ErrorHandler("Session expired");
+            }
+        } catch (error) {
+            super.logMessage("bucketController.js at deleteDocument_delete", error);
+            next(error);
+        }
     }
 
     async fetchPersonalBucket_get(req, res, next) {
