@@ -10,6 +10,10 @@ const analyticSchema = new mongoose.Schema({
 });
 
 const analyticResultSchema = new mongoose.Schema({
+    creatorId: {
+        type: String,
+        required: [true, "creatorId must be provided"],
+    },
     folderId: {
         type: String,
         required: [true, "folderId must be provided"],

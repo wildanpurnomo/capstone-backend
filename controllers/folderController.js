@@ -1,6 +1,5 @@
 const { ErrorHandler } = require('../lib/error');
 const FolderModel = require('../models/FolderModel');
-const SlugModel = require('../models/SlugModel');
 const BucketModel = require('../models/BucketModel');
 const BaseController = require('./baseController');
 
@@ -36,10 +35,6 @@ class FolderController extends BaseController {
             if (decoded) {
                 req.body.creatorId = decoded.id;
                 let folder = await FolderModel.add(req.body);
-                await SlugModel.create({
-                    folderId: folder._id,
-                    folderSlug: req.body.folderName.trim().replace(/\s+/g, '-').toLowerCase() + `-${decoded.id}`
-                });
                 folder.creatorId = undefined;
                 res.status(200).json(super.createSuccessResponse({ folderData: folder }));
             } else {
@@ -55,12 +50,7 @@ class FolderController extends BaseController {
         try {
             let decoded = this.verifyToken(req);
             if (decoded) {
-                let folder = await FolderModel.findOneAndUpdate({ _id: req.params.folderId }, req.body, { new: true });
-                await SlugModel.findOneAndUpdate(
-                    { folderId: req.params.folderId },
-                    { folderSlug: folder.folderName.replace(/\s+/g, '-').toLowerCase() + `-${decoded.id}` },
-                    { new: true }
-                );
+                let folder = await FolderModel.alter(decoded.id, req.params.folderId, req.body);
                 folder.creatorId = undefined;
                 res.status(200).json(super.createSuccessResponse({ folderData: folder }));
             } else {
@@ -77,7 +67,6 @@ class FolderController extends BaseController {
             let decoded = this.verifyToken(req);
             if (decoded) {
                 let deleted = await FolderModel.deleteOne({ _id: req.params.folderId });
-                SlugModel.deleteOne({ folderId: req.params.folderId });
                 BucketModel.deleteMany({ folderId: req.params.folderId });
                 deleted.creatorId = undefined;
                 res.status(200).json(super.createSuccessResponse({ deletedFolder: deleted }));

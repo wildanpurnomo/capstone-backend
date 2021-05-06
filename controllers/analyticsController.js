@@ -2,7 +2,6 @@ const { ErrorHandler } = require('../lib/error');
 const BaseController = require('./baseController');
 const axios = require('axios');
 const AnalyticResultModel = require('../models/AnalyticResultModel');
-const SlugModel = require('../models/SlugModel');
 
 class AnalyticsController extends BaseController {
     constructor() {
@@ -15,8 +14,12 @@ class AnalyticsController extends BaseController {
         try {
             let decoded = this.verifyToken(req);
             if (decoded) {
-                let slugModel = await SlugModel.findOne({ folderSlug: req.params.folderSlug + `-${decoded.id}` });
-                let result = await AnalyticResultModel.find({ folderId: slugModel.folderId });
+                let result = await AnalyticResultModel.findOne(
+                    { 
+                        creatorId: decoded.id, 
+                        folderSlug: req.params.folderSlug + `-${decoded.id}` 
+                    }
+                );
 
                 res.status(200).json(super.createSuccessResponse(result));
             } else {
@@ -42,19 +45,6 @@ class AnalyticsController extends BaseController {
                 let response = await axios.post(process.env.AI_SERVICE, requestBody);
                 if (response.status === 200) {
                     let result = this.clusterizedAnalyticResponse(response.data);
-
-                    if (req.body.folderSlug !== null || req.body.folderSlug !== undefined) {
-                        let slugModel = await SlugModel.findOneAndUpdate(
-                            { folderSlug: req.body.folderSlug + `-${decoded.id}` },
-                            result,
-                            { upsert: true, new: true, setDefaultOnInsert: true},
-                        );
-                        await AnalyticResultModel.create({
-                            folderId: slugModel.folderId,
-                            result: result
-                        });
-                    }
-
                     res.status(200).json(super.createSuccessResponse(result));
                 }
             } else {

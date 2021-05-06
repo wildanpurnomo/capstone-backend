@@ -1,6 +1,6 @@
 const { ErrorHandler } = require('../lib/error');
 const BucketModel = require('../models/BucketModel');
-const SlugModel = require('../models/SlugModel');
+const FolderModel = require('../models/FolderModel');
 const BaseController = require('./baseController');
 const path = require('path');
 const { Storage } = require('@google-cloud/storage');
@@ -54,12 +54,25 @@ class BucketController extends BaseController {
         try {
             let decoded = this.verifyToken(req);
             if (decoded) {
-                let slugModel = await SlugModel.findOne({ folderSlug: req.params.folderSlug + `-${decoded.id}` });
-                let bucketList = await BucketModel.find({ creatorId: decoded.id, folderId: slugModel.folderId });
+                let folderModel = await FolderModel.findOne(
+                    { 
+                        creatorId: decoded.id,
+                        folderSlug: req.params.folderSlug + `-${decoded.id}` 
+                    }
+                );
+
+                let bucketList = await BucketModel.find(
+                    { 
+                        creatorId: decoded.id, 
+                        folderId: folderModel._id
+                    }
+                );
+
                 let bucketData = {
-                    folderId: slugModel.folderId,
+                    folderId: folderModel._id,
                     documents: bucketList
                 }
+
                 res.status(200).json(super.createSuccessResponse({ bucketData: bucketData }));
             } else {
                 throw new ErrorHandler("Session expired");
