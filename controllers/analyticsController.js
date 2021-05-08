@@ -99,12 +99,12 @@ class AnalyticsController extends BaseController {
                 clusterized[0].clusterPairIndex.push(rawResponse.Pair[index]);
                 clusterized[0].clusterSubstrings.push(rawResponse.Substring[index]);
                 clusterized[0].clusterSimilarities.push(item);
-            } else if (0.25 < x <= 0.50) {
+            } else if (x > 0.25 && x <= 0.50) {
                 clusterized[1].pairingCount += 1;
                 clusterized[1].clusterPairIndex.push(rawResponse.Pair[index]);
                 clusterized[1].clusterSubstrings.push(rawResponse.Substring[index]);
                 clusterized[1].clusterSimilarities.push(item);
-            } else if (0.50 < x <= 0.75) {
+            } else if (x > 0.50 && x <= 0.75) {
                 clusterized[2].pairingCount += 1;
                 clusterized[2].clusterPairIndex.push(rawResponse.Pair[index]);
                 clusterized[2].clusterSubstrings.push(rawResponse.Substring[index]);
