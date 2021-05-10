@@ -2,11 +2,13 @@ const { ErrorHandler } = require('../lib/error');
 const BaseController = require('./baseController');
 const axios = require('axios');
 const AnalyticResultModel = require('../models/AnalyticResultModel');
+const FolderModel = require('../models/FolderModel');
 
 class AnalyticsController extends BaseController {
     constructor() {
         super();
         this.processDocuments_post = this.processDocuments_post.bind(this);
+        this.processDocumentsV2_post = this.processDocumentsV2_post.bind(this);
         this.getAnalyticResult_get = this.getAnalyticResult_get.bind(this);
     }
 
@@ -14,14 +16,16 @@ class AnalyticsController extends BaseController {
         try {
             let decoded = this.verifyToken(req);
             if (decoded) {
-                let result = await AnalyticResultModel.findOne(
-                    { 
-                        creatorId: decoded.id, 
-                        folderSlug: req.params.folderSlug + `-${decoded.id}` 
-                    }
-                );
+                let folder = await FolderModel.findOne({
+                    creatorId: decoded.id,
+                    folderSlug: req.params.folderSlug + `-${decoded.id}`
+                });
 
-                res.status(200).json(super.createSuccessResponse(result));
+                res.status(200).json(super.createSuccessResponse(
+                    await AnalyticResultModel.findOne({
+                        creatorId: decoded.id,
+                        folderId: folder._id
+                    })));
             } else {
                 throw new ErrorHandler("Session expired");
             }
@@ -52,6 +56,51 @@ class AnalyticsController extends BaseController {
             }
         } catch (error) {
             super.logMessage("analyticsController.js at processDocuments_post", error);
+            next(error);
+        }
+    }
+
+    async processDocumentsV2_post(req, res, next) {
+        try {
+            let decoded = this.verifyToken(req);
+            if (decoded) {
+                this.validateClientInput(req.body.documents, 1.0);
+
+                let analyticResult = await AnalyticResultModel.findOne({
+                    creatorId: decoded.id,
+                    folderId: req.body.folderId
+                });
+
+                if (analyticResult !== null && JSON.stringify(analyticResult.documentUrls) === JSON.stringify(req.body.documents)) {
+                    res.status(200).json(super.createSuccessResponse({ result: analyticResult.result }));
+                    return;
+                }
+
+                let requestBody = {
+                    similarity: 0.0,
+                    URLlist: req.body.documents
+                };
+                let response = await axios.post(process.env.AI_SERVICE, requestBody);
+                if (response.status === 200) {
+                    let clusterizedResult = this.clusterizedAnalyticResponse(response.data);
+                    let stored = {
+                        creatorId: decoded.id,
+                        folderId: req.body.folderId,
+                        documentUrls: req.body.documents,
+                        result: clusterizedResult
+                    }
+                    AnalyticResultModel.findOneAndUpdate(
+                        { creatorId: decoded.id, folderId: req.body.folderId },
+                        stored,
+                        { upsert: true, new: true, setDefaultOnInsert: true },
+                    ).exec();
+                    res.status(200).json(super.createSuccessResponse({ result: clusterizedResult }));
+                }
+            } else {
+                throw new ErrorHandler("Session expired");
+            }
+        } catch (error) {
+            super.logMessage("analyticsController.js at processDocumentsV2_post", error);
             next(error);
         }
     }
@@ -93,7 +142,7 @@ class AnalyticsController extends BaseController {
         ];
 
         rawResponse.Similarity.forEach((item, index) => {
-            let x = Math.round(parseFloat(item) * 100 ) / 100;
+            let x = Math.round(parseFloat(item) * 100) / 100;
             if (x <= 0.25) {
                 clusterized[0].pairingCount += 1;
                 clusterized[0].clusterPairIndex.push(rawResponse.Pair[index]);

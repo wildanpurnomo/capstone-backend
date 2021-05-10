@@ -18,6 +18,10 @@ const analyticResultSchema = new mongoose.Schema({
         type: String,
         required: [true, "folderId must be provided"],
     },
+    documentUrls: {
+        type: Array,
+        required: [true, "documentUrls must be provided"],
+    },
     result: {
         type: [analyticSchema],
         required: [true, "result must be provided"]
