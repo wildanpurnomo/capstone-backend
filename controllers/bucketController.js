@@ -55,15 +55,15 @@ class BucketController extends BaseController {
             let decoded = this.verifyToken(req);
             if (decoded) {
                 let folderModel = await FolderModel.findOne(
-                    { 
+                    {
                         creatorId: decoded.id,
-                        folderSlug: req.params.folderSlug + `-${decoded.id}` 
+                        folderSlug: req.params.folderSlug + `-${decoded.id}`
                     }
                 );
 
                 let bucketList = await BucketModel.find(
-                    { 
-                        creatorId: decoded.id, 
+                    {
+                        creatorId: decoded.id,
                         folderId: folderModel._id
                     }
                 );
@@ -108,7 +108,7 @@ class BucketController extends BaseController {
                         let hashed = await bcrypt.hash(file.originalname, salt);
                         let gcsName = `${hashed}${fileType}`;
                         let blob = bucket.file(gcsName);
-                        let blobStream = blob.createWriteStream();
+                        let blobStream = blob.createWriteStream({ resumable: false });
 
                         blobStream.on('error', err => {
                             reject(err);
