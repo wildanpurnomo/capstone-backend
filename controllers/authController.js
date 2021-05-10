@@ -20,7 +20,9 @@ class AuthController extends BaseController {
             let user = await UserModel.create({ username: username.trim(), password: password });
             if (user) {
                 let token = super.createToken(user._id);
+                user._id = undefined
                 user.password = undefined;
+                user.isUsingGoogleAuth = false;
                 res.cookie('jwt', token, super.generateCookieOption());
                 res.status(200).json(super.createSuccessResponse({ userData: user }));
             }
@@ -35,7 +37,9 @@ class AuthController extends BaseController {
             let { username, password } = req.body;
             let user = await UserModel.login(username.trim(), password);
             let token = this.createToken(user._id);
+            user._id = undefined;
             user.password = undefined;
+            user.isUsingGoogleAuth = false;
             res.cookie('jwt', token, super.generateCookieOption());
             res.status(200).json(super.createSuccessResponse({ userData: user }));
         } catch (error) {
@@ -115,10 +119,15 @@ class AuthController extends BaseController {
                     let classroom = google.classroom({ version: 'v1', auth: oauth2Client });
                     let userProfileResponse = await classroom.userProfiles.get({ userId: 'me' });
                     let userProfile = userProfileResponse.data;
-                    res.status(200).json(super.createSuccessResponse({ userData: { _id: userProfile.id, username: userProfile.name.fullName } }));
+                    res.status(200).json(super.createSuccessResponse({ userData: { 
+                        username: userProfile.name.fullName,
+                        isUsingGoogleAuth: true,
+                    } }));
                 } else {
                     let user = await UserModel.findById(decoded.id);
+                    user._id = undefined
                     user.password = undefined;
+                    user.isUsingGoogleAuth = false;
                     res.status(200).json(super.createSuccessResponse({ userData: user }));
                 }
             } else {
