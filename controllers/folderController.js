@@ -67,8 +67,8 @@ class FolderController extends BaseController {
             let decoded = this.verifyToken(req);
             if (decoded) {
                 let deleted = await FolderModel.deleteOne({ _id: req.params.folderId });
-                BucketModel.deleteMany({ folderId: req.params.folderId });
                 deleted.creatorId = undefined;
+                BucketModel.deleteMany({ folderId: req.params.folderId }).exec();
                 res.status(200).json(super.createSuccessResponse({ deletedFolder: deleted }));
             } else {
                 throw new ErrorHandler("Session expired");
